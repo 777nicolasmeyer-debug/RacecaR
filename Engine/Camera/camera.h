@@ -2,8 +2,8 @@
 // Created by 777ni on 2026/09/13.
 //
 
-#ifndef PHYSICS_SIM_CAMERA_H
-#define PHYSICS_SIM_CAMERA_H
+#ifndef RACECAR_CAMERA_H
+#define RACECAR_CAMERA_H
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -42,4 +42,4 @@ private:
     glm::vec3 cameraRight;
     glm::vec3 cameraUp;
 };
-#endif //PHYSICS_SIM_CAMERA_H
+#endif // RACECAR_CAMERA_H

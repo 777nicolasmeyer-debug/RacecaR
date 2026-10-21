@@ -1,5 +1,5 @@
-#ifndef PHYSICS_SIM_ENGINE_H
-#define PHYSICS_SIM_ENGINE_H
+#ifndef RACECAR_ENGINE_H
+#define RACECAR_ENGINE_H
 
 #include <vector>
 #include <string>

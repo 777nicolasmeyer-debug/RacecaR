@@ -2,8 +2,8 @@
 // Created by 777ni on 2026/09/15.
 //
 
-#ifndef PHYSICS_SIM_COLLISIONS_H
-#define PHYSICS_SIM_COLLISIONS_H
+#ifndef RACECAR_COLLISIONS_H
+#define RACECAR_COLLISIONS_H
 #include <glm/glm.hpp>
 #include <bullet/btBulletCollisionCommon.h>
 #include "../Meshes/Meshes.h"
@@ -24,4 +24,4 @@ public:
 };
 
 
-#endif //PHYSICS_SIM_COLLISIONS_H
+#endif // RACECAR_COLLISIONS_H

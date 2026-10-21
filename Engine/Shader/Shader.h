@@ -2,8 +2,8 @@
 // Created by 777ni on 2026/09/10.
 //
 
-#ifndef PHYSICS_SIM_SHADER_H
-#define PHYSICS_SIM_SHADER_H
+#ifndef RACECAR_SHADER_H
+#define RACECAR_SHADER_H
 #include <fstream>
 #include <sstream>
 #include <glad/glad.h>
@@ -22,4 +22,4 @@ public:
     void loadTexture(const char* name, int textureUnit);
 
 };
-#endif //PHYSICS_SIM_SHADER_H
+#endif // RACECAR_SHADER_H

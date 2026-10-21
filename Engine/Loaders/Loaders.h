@@ -2,8 +2,8 @@
 // Created by 777ni on 2026/09/11.
 //
 
-#ifndef PHYSICS_SIM_LOADERS_H
-#define PHYSICS_SIM_LOADERS_H
+#ifndef RACECAR_LOADERS_H
+#define RACECAR_LOADERS_H
 #include <glad/glad.h>
 #include "../Meshes/Meshes.h"
 #include <tiny_gltf.h>
@@ -36,4 +36,4 @@ public:
     sf::Music music;
 };
 
-#endif //PHYSICS_SIM_LOADERS_H
+#endif // RACECAR_LOADERS_H

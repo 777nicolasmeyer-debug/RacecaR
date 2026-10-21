@@ -2,8 +2,8 @@
 // Created by 777ni on 2026/09/16.
 //
 
-#ifndef PHYSICS_SIM_SCENEMANAGER_H
-#define PHYSICS_SIM_SCENEMANAGER_H
+#ifndef RACECAR_SCENEMANAGER_H
+#define RACECAR_SCENEMANAGER_H
 
 
 #include "../Rendering/VAO_VBO.h"
@@ -41,4 +41,4 @@ struct LightingObject {
 };
 
 
-#endif //PHYSICS_SIM_SCENEMANAGER_H
+#endif // RACECAR_SCENEMANAGER_H

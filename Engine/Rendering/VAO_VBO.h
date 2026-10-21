@@ -2,8 +2,8 @@
 // Created by 777ni on 2026/09/10.
 //
 
-#ifndef PHYSICS_SIM_VAO_VBO_H
-#define PHYSICS_SIM_VAO_VBO_H
+#ifndef RACECAR_VAO_VBO_H
+#define RACECAR_VAO_VBO_H
 #include "../Meshes/Meshes.h"
 #include "../Loaders/Loaders.h"
 #include <glad/glad.h>
@@ -19,4 +19,4 @@ public:
     void draw() const;
 };
 
-#endif //PHYSICS_SIM_VAO_VBO_H
+#endif // RACECAR_VAO_VBO_H

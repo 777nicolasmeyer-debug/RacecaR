@@ -1,4 +1,4 @@
-# Physics_sim
+# RacecaR
 
 `Engine` is a renderer/physics component; it does not create a window, poll events,
 or swap buffers. The host application owns the OpenGL context and drives the engine,

@@ -2,8 +2,8 @@
 // Created by 777ni on 2026/09/11.
 //
 
-#ifndef PHYSICS_SIM_MATRIX_H
-#define PHYSICS_SIM_MATRIX_H
+#ifndef RACECAR_MATRIX_H
+#define RACECAR_MATRIX_H
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
@@ -21,4 +21,4 @@ class Matrix {
 };
 
 
-#endif //PHYSICS_SIM_MATRIX_H
+#endif // RACECAR_MATRIX_H

@@ -109,11 +109,11 @@ int main() {
                 engine.update(deltaTime);
                 if (engine.hasPlayer()) {
                     char title[80];
-                    std::snprintf(title, sizeof(title), "Physics sim | Gear %d | %.0f RPM",
+                    std::snprintf(title, sizeof(title), "RacecaR | Gear %d | %.0f RPM",
                                   engine.getPlayerGear(), engine.getPlayerRPM());
                     glfwSetWindowTitle(window, title);
                 } else {
-                    glfwSetWindowTitle(window, "Physics sim");
+                    glfwSetWindowTitle(window, "RacecaR");
                 }
                 int width = 0;
                 int height = 0;
