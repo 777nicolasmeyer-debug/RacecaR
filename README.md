@@ -57,21 +57,21 @@ cmake --build build --config Release
 
 ### Run
 
-Run the executable with the `build` directory as its **working directory**.
-The sample loads shaders and models through paths relative to that directory.
+The build defines `RESOURCES_PATH` as the source directory, so the sample can
+find its models and shaders regardless of the process working directory. Add a
+resource path by appending its repository-relative location, for example
+`RESOURCES_PATH "assets/Light.glb"`.
 
 For a single-configuration generator:
 
 ```sh
-cd build
-./RacecaR
+./build/RacecaR
 ```
 
 For a multi-configuration generator such as Visual Studio:
 
 ```powershell
-Set-Location build
-.\Release\RacecaR.exe
+.\build\Release\RacecaR.exe
 ```
 
 On Windows, ensure the SFML runtime DLLs in

@@ -43,7 +43,7 @@ void Engine::togglePlayer() {
         return;
     }
 
-    const auto &carMeshes = loadModelMeshes("../assets/RB18_F1.glb");
+    const auto &carMeshes = loadModelMeshes(ASSET_RESOURCES_PATH "RB18_F1.glb");
     car.spawn(carMeshes, camera, collisions);
 }
 

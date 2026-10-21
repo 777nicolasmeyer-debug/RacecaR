@@ -74,3 +74,8 @@ target_include_directories(RacecaR PRIVATE
         "${EXTERNAL_DIR}/bullet3-3.25/src"
         Engine
 )
+
+target_compile_definitions(RacecaR PRIVATE
+        ASSET_RESOURCES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/"
+        SHADER_RESOURCES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/Engine/Shader/"
+)

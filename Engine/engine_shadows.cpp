@@ -17,9 +17,9 @@ glm::mat4 makeModelMatrix(const SceneObject& object) {
 }
 
 bool Engine::initializeShadowMap() {
-    shadowShader.createShaders("../Engine/Shader/shadow_vertex.glsl",
-                               "../Engine/Shader/shadow_geometry.glsl",
-                               "../Engine/Shader/shadow_fragment.glsl");
+    shadowShader.createShaders(SHADER_RESOURCES_PATH "shadow_vertex.glsl",
+                               SHADER_RESOURCES_PATH "shadow_geometry.glsl",
+                               SHADER_RESOURCES_PATH "shadow_fragment.glsl");
     if (shadowShader.ID == 0) {
         return false;
     }

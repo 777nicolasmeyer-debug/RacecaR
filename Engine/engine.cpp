@@ -30,7 +30,8 @@ bool Engine::initialize() {
 
     loader.initialize();
     collisions.init();
-    shader.createShaders("../Engine/Shader/vertex.glsl", "../Engine/Shader/fragment.glsl");
+    shader.createShaders(SHADER_RESOURCES_PATH "vertex.glsl",
+                         SHADER_RESOURCES_PATH "fragment.glsl");
     shader.use();
     shader.loadTexture("tex", 0);
     shadowMapReady = initializeShadowMap();

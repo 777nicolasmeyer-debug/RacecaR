@@ -72,8 +72,12 @@ int main() {
         if (!engine.initialize()) {
             result = 1;
         } else {                                //track one is degenerate, it wont work
-            engine.addStaticModel("../assets/F1_track2.glb", "../assets/track2_collision.glb", glm::vec3(0.0f));
-            engine.addLight("../assets/Light.glb", glm::vec3(900.0f, 1500.0f, 650.0f), glm::vec3(1.0f), false, true);
+            constexpr char trackPath[] = ASSET_RESOURCES_PATH "F1_track2.glb";
+            constexpr char collisionPath[] = ASSET_RESOURCES_PATH "track2_collision.glb";
+            constexpr char lightPath[] = ASSET_RESOURCES_PATH "Light.glb";
+            engine.addStaticModel(trackPath, collisionPath, glm::vec3(0.0f));
+            engine.addLight(lightPath, glm::vec3(900.0f, 1500.0f, 650.0f),
+                            glm::vec3(1.0f), false, true);
             glClearColor(0.4f, 0.6f, 0.8f, 1.0f);
             float lastFrame = static_cast<float>(glfwGetTime());
             while (!glfwWindowShouldClose(window)) {
@@ -91,7 +95,7 @@ int main() {
 
                 const bool lightDown = glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS;
                 if (lightDown && !app.spawnLightWasDown) {
-                    engine.addLight("../assets/Light.glb", engine.getCameraPosition());
+                    engine.addLight(lightPath, engine.getCameraPosition());
                 }
                 app.spawnLightWasDown = lightDown;
 
