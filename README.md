@@ -1,29 +1,118 @@
 # RacecaR
 
-`Engine` is a renderer/physics component; it does not create a window, poll events,
-or swap buffers. The host application owns the OpenGL context and drives the engine,
-so it can use GLFW, Qt, or an ImGui host:
+**A small 3D driving sandbox built with C++, OpenGL, and Bullet Physics.**
 
-1. Create and activate an OpenGL 3.3 context, then initialize GLAD.
-2. Call `Engine::initialize()` once while that context is current.
-3. Add model files with `addStaticModel`, `addDynamicModel`, and `addLight`.
-   The engine loads all meshes in the selected glTF scene, applies node transforms,
-   and caches loaded model data. Mesh-level methods are also available for custom
-   procedural assets.
-4. Each frame, translate the host's keyboard state to `Engine::CameraInput`, call
-   `handleKeyboardInput`, `update(deltaTime)`, and `render(width, height)`.
-5. Draw the GUI after `render`, then let the host swap/present its buffers.
+RacecaR renders a glTF-based F1 car and track in a real-time scene. Drive with a
+manual gearbox, explore on foot, and add lights to the scene. The project also
+includes a host-driven `Engine` API for applications that want to own their
+window and OpenGL lifecycle.
 
-`src/main.cpp` is the GLFW example host and contains the sample game's asset setup
-and spawn-key bindings. A Qt host can use the same engine calls from its
-`QOpenGLWidget` lifecycle without adopting the sample application's GLFW loop.
+> **Current state:** CMake builds the GLFW sample application (`RacecaR`). The
+> engine source is organized around a host-driven API, but is not yet exported
+> as a standalone CMake library.
 
-The sample F1 car uses W to accelerate, S or Space to brake, A/D to steer,
-E to shift up, and Q to shift down. Its manual eight-speed gearbox shifts once per key press,
-and the window title displays the current gear and RPM. The car coasts with
-gradual drag instead of rapidly losing speed when throttle is released.
-`Engine::getPlayerRPM()` and `Engine::getPlayerGear()` are available to a host
-that wants to draw its own dashboard. Gear speed limits, acceleration rates,
-gear RPM multipliers, coast drag, tire grip, yaw rate, downforce, and brake force
-are tuned in `Engine/Car/CarConfig.h`. The RPM display follows vehicle speed but does not
-control vehicle speed or acceleration.
+## Features
+
+- OpenGL 3.3 rendering with point lights and shadow mapping
+- glTF scene loading, including node transforms and model caching
+- Bullet-powered collision and vehicle physics
+- Switchable first-person camera and F1 car
+- Eight-speed manual gearbox with RPM and gear shown in the window title
+- Configurable vehicle handling in `Engine/Car/CarConfig.h`
+
+## Controls
+
+| Action | On foot | In the car |
+| --- | --- | --- |
+| Move / accelerate | `W` | `W` |
+| Move backward / brake | `S` | `S` or `Space` |
+| Strafe / steer | `A` / `D` | `A` / `D` |
+| Move vertically | `Space` / `Left Shift` | N/A |
+| Shift gear | N/A | `E` up / `Q` down |
+| Look around | Mouse | Camera follows the car |
+| Toggle car | `P` | `P` |
+| Spawn a light | `L` | `L` |
+| Clear dynamic objects and lights | `R` | `R` |
+| Quit | `Esc` | `Esc` |
+
+## Build and run
+
+### Requirements
+
+- CMake 3.20 or newer
+- A C++23-capable compiler
+- A graphics driver that supports OpenGL 3.3
+
+Dependencies are included under `Engine/external`. The build uses bundled GLFW
+and Bullet sources, GLAD, GLM, TinyGLTF, and the SFML 3 audio package.
+
+### Build
+
+From the repository root:
+
+```sh
+cmake -S . -B build
+cmake --build build --config Release
+```
+
+### Run
+
+Run the executable with the `build` directory as its **working directory**.
+The sample loads shaders and models through paths relative to that directory.
+
+For a single-configuration generator:
+
+```sh
+cd build
+./RacecaR
+```
+
+For a multi-configuration generator such as Visual Studio:
+
+```powershell
+Set-Location build
+.\Release\RacecaR.exe
+```
+
+On Windows, ensure the SFML runtime DLLs in
+`Engine/external/SFML/SFML-3.1.0/bin` can be found by the application (for
+example, by adding that directory to `PATH`).
+
+## Using the engine API
+
+`Engine/Engine.h` contains the public interface. The host application must
+create and activate an OpenGL 3.3 context, initialize GLAD, then initialize the
+engine while that context is current. Each frame, pass input and elapsed time
+to the engine, render using the framebuffer dimensions, and let the host
+present its window:
+
+```cpp
+Engine engine;
+if (!engine.initialize()) {
+    // Handle initialization failure.
+}
+
+engine.addStaticModel("track.glb", glm::vec3(0.0f));
+
+// In the host application's frame loop:
+Engine::CameraInput input; // Map the host's key state into these fields.
+engine.handleKeyboardInput(input, deltaTime);
+engine.update(deltaTime);
+engine.render(framebufferWidth, framebufferHeight);
+// Present/swap buffers in the host application.
+```
+
+See [`src/main.cpp`](src/main.cpp) for the complete GLFW host, input mapping,
+and example scene setup. The engine API also supports adding static and dynamic
+models, lights, and procedural mesh data.
+
+## Project layout
+
+| Path | Contents |
+| --- | --- |
+| `src/main.cpp` | GLFW sample application and frame loop |
+| `Engine/` | Rendering, camera, scene, loading, and physics code |
+| `Engine/Car/` | Vehicle behavior and handling configuration |
+| `Engine/Shader/` | GLSL shaders |
+| `assets/` | Track, car, light, collision, and audio assets |
+| `Engine/external/` | Bundled third-party dependencies |
