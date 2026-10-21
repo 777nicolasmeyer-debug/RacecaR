@@ -4,9 +4,10 @@
 
 #include "Collisions.h"
 #include <algorithm>
-#include <bullet/btBulletDynamicsCommon.h>
+#include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btInternalEdgeUtility.h>
 #include <BulletCollision/CollisionDispatch/btManifoldResult.h>
+#include <cmath>
 #include <limits>
 #include <vector>
 
@@ -64,17 +65,57 @@ btRigidBody* Collisions::triangleShapeS(SceneObject& sceneObj, const MeshData& m
     transform.setRotation(btQuaternion(sceneObj.rotation.x,sceneObj.rotation.y,sceneObj.rotation.z,sceneObj.rotation.w));
     btDefaultMotionState* motionState = new btDefaultMotionState(transform);
 
-    btTriangleMesh* triMesh = new btTriangleMesh();
-    for (size_t i = 0; i < mesh.indices.size(); i += 3) {
-        int i0 = mesh.indices[i] * 8;
-        int i1 = mesh.indices[i+1] * 8;
-        int i2 = mesh.indices[i+2] * 8;
+    auto* triMesh = new btTriangleMesh();
+    size_t skippedDegenerate = 0;
+    size_t skippedInvalid = mesh.indices.size() % 3;
+    const size_t vertexCount = mesh.vertices.size() / 8;
+    for (size_t i = 0; i + 2 < mesh.indices.size(); i += 3) {
+        const size_t index0 = mesh.indices[i];
+        const size_t index1 = mesh.indices[i + 1];
+        const size_t index2 = mesh.indices[i + 2];
+        if (index0 >= vertexCount || index1 >= vertexCount || index2 >= vertexCount) {
+            ++skippedInvalid;
+            continue;
+        }
 
-        btVector3 v0(mesh.vertices[i0], mesh.vertices[i0+1], mesh.vertices[i0+2]);
-        btVector3 v1(mesh.vertices[i1], mesh.vertices[i1+1], mesh.vertices[i1+2]);
-        btVector3 v2(mesh.vertices[i2], mesh.vertices[i2+1], mesh.vertices[i2+2]);
-
+        const size_t offset0 = index0 * 8;
+        const size_t offset1 = index1 * 8;
+        const size_t offset2 = index2 * 8;
+        const btVector3 v0(mesh.vertices[offset0], mesh.vertices[offset0 + 1],
+                           mesh.vertices[offset0 + 2]);
+        const btVector3 v1(mesh.vertices[offset1], mesh.vertices[offset1 + 1],
+                           mesh.vertices[offset1 + 2]);
+        const btVector3 v2(mesh.vertices[offset2], mesh.vertices[offset2 + 1],
+                           mesh.vertices[offset2 + 2]);
+        const btVector3 edge1 = v1 - v0;
+        const btVector3 edge2 = v2 - v0;
+        const btVector3 edge3 = v0 - v2;
+        const btVector3 normal = edge1.cross(edge2);
+        if (!std::isfinite(normal.x()) || !std::isfinite(normal.y()) ||
+            !std::isfinite(normal.z())) {
+            ++skippedInvalid;
+            continue;
+        }
+        constexpr btScalar minimumGeometryLengthSquared = btScalar(1e-8);
+        if (edge1.length2() < minimumGeometryLengthSquared ||
+            edge2.length2() < minimumGeometryLengthSquared ||
+            edge3.length2() < minimumGeometryLengthSquared ||
+            normal.length2() < minimumGeometryLengthSquared) {
+            ++skippedDegenerate;
+            continue;
+        }
         triMesh->addTriangle(v0, v1, v2);
+    }
+
+    if (skippedDegenerate > 0 || skippedInvalid > 0) {
+        std::cerr << "Skipped " << skippedDegenerate << " degenerate and "
+                  << skippedInvalid << " invalid collision triangles" << std::endl;
+    }
+    if (triMesh->getNumTriangles() == 0) {
+        std::cerr << "Cannot create static collision mesh: no valid triangles" << std::endl;
+        delete triMesh;
+        delete motionState;
+        return nullptr;
     }
 
     btBvhTriangleMeshShape* triShape = new btBvhTriangleMeshShape(triMesh, true);

@@ -5,7 +5,7 @@
 #ifndef RACECAR_COLLISIONS_H
 #define RACECAR_COLLISIONS_H
 #include <glm/glm.hpp>
-#include <bullet/btBulletCollisionCommon.h>
+#include <btBulletCollisionCommon.h>
 #include "../Meshes/Meshes.h"
 #include"../Scene/SceneManager.h"
 #include <iostream>
