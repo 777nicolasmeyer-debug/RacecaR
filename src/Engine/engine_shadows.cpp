@@ -7,13 +7,6 @@
 
 namespace {
 
-glm::mat4 makeModelMatrix(const SceneObject& object) {
-    glm::mat4 model(1.0f);
-    model = glm::translate(model, object.position);
-    model *= glm::mat4_cast(object.rotation);
-    return glm::scale(model, object.scale);
-}
-
 }
 
 bool Engine::initializeShadowMap() {
@@ -87,16 +80,19 @@ void Engine::renderShadowMap(const GLuint shadowCubemap, const glm::vec3& lightP
     glClear(GL_DEPTH_BUFFER_BIT);
 
     for (const auto& object : terrainObjects) {
-        shadowShader.loadMatrix("model", makeModelMatrix(object));
+        shadowShader.loadMatrix("model", object.modelMatrix());
+        object.uploadSkinning(shadowShader);
         object.buffers.draw();
     }
     for (const auto& object : sceneObjects) {
-        shadowShader.loadMatrix("model", makeModelMatrix(object));
+        shadowShader.loadMatrix("model", object.modelMatrix());
+        object.uploadSkinning(shadowShader);
         object.buffers.draw();
     }
     if (car.isActive()) {
         for (const auto& carObject : car.getRenderObjects()) {
-            shadowShader.loadMatrix("model", makeModelMatrix(carObject));
+            shadowShader.loadMatrix("model", carObject.modelMatrix());
+            carObject.uploadSkinning(shadowShader);
             carObject.buffers.draw();
         }
     }

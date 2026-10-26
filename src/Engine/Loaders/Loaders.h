@@ -7,7 +7,6 @@
 #include <glad/glad.h>
 #include "../Meshes/Meshes.h"
 #include <tiny_gltf.h>
-#include <SFML/Audio.hpp>
 
 class Loaders {
 public:
@@ -17,23 +16,16 @@ public:
 
     GLuint createTextureFromImage(const tinygltf::Image &image);
 
-    MeshData extractMeshData(const tinygltf::Model &model, int meshIndex);
+    ModelAnimationData extractAnimationData(const tinygltf::Model &model) const;
+
+    MeshData extractMeshData(const tinygltf::Model &model, int meshIndex,
+                             int skinIndex = -1,
+                             const glm::mat4 &meshNodeTransform = glm::mat4(1.0f));
 
 private:
     GLuint createWhiteTexture();
 
     GLuint whiteTexture = 0;
-};
-
-class Sound {
-public:
-    sf::SoundBuffer buffer;
-    sf::Sound sound;
-};
-
-class Music {
-public:
-    sf::Music music;
 };
 
 #endif // RACECAR_LOADERS_H

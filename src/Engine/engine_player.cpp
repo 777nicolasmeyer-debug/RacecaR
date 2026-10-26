@@ -1,5 +1,6 @@
 #include "Engine.h"
 
+#include "Car/CarConfig.h"
 #include <iostream>
 
 void Engine::handleKeyboardInput(const CameraInput &input, const float deltaTime) {
@@ -21,8 +22,7 @@ void Engine::handleKeyboardInput(const CameraInput &input, const float deltaTime
     const float throttle = static_cast<float>(input.forward);
     const bool braking = input.backward || input.brake;
     const float steering = static_cast<float>(input.right) - static_cast<float>(input.left);
-    car.drive(throttle, braking, steering, deltaTime,
-              collisions.getGroundNormal(car.getBody()), shiftUp, shiftDown);
+    car.drive(throttle, braking, steering, deltaTime, shiftUp, shiftDown);
 }
 
 void Engine::handleMouseInput(const double xpos, const double ypos) {
@@ -33,6 +33,10 @@ float Engine::getPlayerRPM() const {
     return car.isActive() ? car.getRPM() : 0.0f;
 }
 
+float Engine::getPlayerSpeedKmh() const {
+    return car.getSpeedKmh();
+}
+
 int Engine::getPlayerGear() const {
     return car.isActive() ? car.getGear() : 0;
 }
@@ -40,11 +44,18 @@ int Engine::getPlayerGear() const {
 void Engine::togglePlayer() {
     if (car.isActive()) {
         car.despawn(collisions);
+        soundManager.stop();
         return;
     }
 
     const auto &carMeshes = loadModelMeshes(ASSET_RESOURCES_PATH "RB18_F1.glb");
-    car.spawn(carMeshes, camera, collisions);
+    const auto animation = animationCache.find(ASSET_RESOURCES_PATH "RB18_F1.glb");
+    const ModelAnimationData *animationData =
+        animation == animationCache.end() ? nullptr : &animation->second;
+    if (car.spawn(carMeshes, camera, collisions, animationData,
+                  car_config::skeletalAnimationEnabled)) {
+        soundManager.start();
+    }
 }
 
 void Engine::updatePhysicsTransforms() {

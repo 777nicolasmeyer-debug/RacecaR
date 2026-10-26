@@ -3,6 +3,7 @@
 #include <iostream>
 
 Engine::~Engine() {
+    soundManager.stop();
     if (!initialized) {
         return;
     }
@@ -48,8 +49,12 @@ void Engine::update(float deltaTime) {
         return;
     }
     collisions.update(deltaTime);
+    car.updateAnimation(deltaTime);
     updatePhysicsTransforms();
     car.updateCamera(camera);
+    if (car.isActive()) {
+        soundManager.update(car.getRPM(), car.getSpeedKmh(), car.getGear());
+    }
 }
 
 void Engine::render(const int width, const int height) {

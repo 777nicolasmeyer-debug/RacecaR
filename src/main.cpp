@@ -1,4 +1,4 @@
-#include "../Engine/Engine.h"
+#include "Engine/Engine.h"
 
 #include <cstdio>
 #include <iostream>
@@ -72,8 +72,8 @@ int main() {
         if (!engine.initialize()) {
             result = 1;
         } else {                                //track one is degenerate, it wont work
-            constexpr char trackPath[] = ASSET_RESOURCES_PATH "F1_track2.glb";
-            constexpr char collisionPath[] = ASSET_RESOURCES_PATH "track2_collision.glb";
+            constexpr char trackPath[] = ASSET_RESOURCES_PATH "RB_track.glb";
+            constexpr char collisionPath[] = ASSET_RESOURCES_PATH "RB_track_collision.glb";
             constexpr char lightPath[] = ASSET_RESOURCES_PATH "Light.glb";
             engine.addStaticModel(trackPath, collisionPath, glm::vec3(0.0f));
             engine.addLight(lightPath, glm::vec3(900.0f, 1500.0f, 650.0f),
@@ -112,9 +112,11 @@ int main() {
 
                 engine.update(deltaTime);
                 if (engine.hasPlayer()) {
-                    char title[80];
-                    std::snprintf(title, sizeof(title), "RacecaR | Gear %d | %.0f RPM",
-                                  engine.getPlayerGear(), engine.getPlayerRPM());
+                    char title[128];
+                    std::snprintf(title, sizeof(title),
+                                  "RacecaR | Gear %d | %.0f RPM | Speed %03.0f km/h",
+                                  engine.getPlayerGear(), engine.getPlayerRPM(),
+                                  engine.getPlayerSpeedKmh());
                     glfwSetWindowTitle(window, title);
                 } else {
                     glfwSetWindowTitle(window, "RacecaR");

@@ -5,6 +5,7 @@
 #include "Collisions.h"
 #include <algorithm>
 #include <btBulletDynamicsCommon.h>
+#include <BulletDynamics/Vehicle/btRaycastVehicle.h>
 #include <BulletCollision/CollisionDispatch/btInternalEdgeUtility.h>
 #include <BulletCollision/CollisionDispatch/btManifoldResult.h>
 #include <cmath>
@@ -56,6 +57,18 @@ void Collisions::init() {
     btRigidBody* groundBody = new btRigidBody(groundCI);
     dynamicsWorld->addRigidBody(groundBody);
 
+}
+
+btVehicleRaycaster* Collisions::createVehicleRaycaster() const {
+    return new btDefaultVehicleRaycaster(dynamicsWorld);
+}
+
+void Collisions::addVehicle(btActionInterface* vehicle) {
+    dynamicsWorld->addAction(vehicle);
+}
+
+void Collisions::removeVehicle(btActionInterface* vehicle) {
+    dynamicsWorld->removeAction(vehicle);
 }
 
 btRigidBody* Collisions::triangleShapeS(SceneObject& sceneObj, const MeshData& mesh) {
@@ -255,7 +268,7 @@ btRigidBody* Collisions::convexShapeD(SceneObject& sceneObj, const MeshData& mes
 }
 
 btRigidBody* Collisions::boxShapeD(SceneObject& sceneObj, const MeshData& mesh,
-                                   const glm::vec3& scale) {
+                                   const glm::vec3& scale, const float mass) {
     if (mesh.vertices.empty()) {
         return nullptr;
     }
@@ -284,7 +297,6 @@ btRigidBody* Collisions::boxShapeD(SceneObject& sceneObj, const MeshData& mesh,
                                        sceneObj.rotation.z, sceneObj.rotation.w));
 
     btVector3 inertia(0.0f, 0.0f, 0.0f);
-    constexpr btScalar mass = 20.0f;
     shape->calculateLocalInertia(mass, inertia);
     auto* motionState = new btDefaultMotionState(transform);
     btRigidBody::btRigidBodyConstructionInfo info(mass, motionState, shape, inertia);

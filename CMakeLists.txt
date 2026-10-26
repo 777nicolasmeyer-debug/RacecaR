@@ -3,7 +3,7 @@ project(RacecaR)
 
 set(CMAKE_CXX_STANDARD 23)
 
-# Vcpkg dependencies (disabled; the project uses the copies in Engine/external).
+# Vcpkg dependencies (disabled; the project uses the copies in src/Engine/external).
 # find_package(glad CONFIG REQUIRED)
 # find_package(glfw3 CONFIG REQUIRED)
 # find_package(Stb REQUIRED)
@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD 23)
 #         PATHS ${VCPKG_ROOT}/installed/x64-mingw-dynamic/include
 # )
 
-set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Engine/external")
+set(EXTERNAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/Engine/external")
 
 set(BUILD_CPU_DEMOS OFF CACHE BOOL "" FORCE)
 set(BUILD_BULLET2_DEMOS OFF CACHE BOOL "" FORCE)
@@ -41,21 +41,23 @@ set(TINYGLTF_INCLUDE_DIR "${EXTERNAL_DIR}/tinygltf-3.0.1/attic")
 
 add_executable(RacecaR
         src/main.cpp
-        Engine/loaders_implementation.cpp
-        Engine/Car/Car.cpp
-        Engine/engine.cpp
-        Engine/engine_assets.cpp
-        Engine/engine_player.cpp
-        Engine/engine_scene.cpp
-        Engine/engine_shadows.cpp
-        Engine/Meshes/Meshes.cpp
-        Engine/Rendering/VAO_VBO.cpp
-        Engine/Shader/Shader.cpp
-        Engine/Loaders/Loaders.cpp
-        Engine/Math/matrix.cpp
-        Engine/Camera/camera.cpp
-        Engine/Math/Collisions.cpp
-        Engine/Scene/SceneManager.cpp
+        src/Engine/loaders_implementation.cpp
+        src/Engine/Car/Car.cpp
+        src/Engine/engine.cpp
+        src/Engine/engine_assets.cpp
+        src/Engine/engine_player.cpp
+        src/Engine/engine_scene.cpp
+        src/Engine/engine_shadows.cpp
+        src/Engine/Meshes/Meshes.cpp
+        src/Engine/Rendering/VAO_VBO.cpp
+        src/Engine/Shader/Shader.cpp
+        src/Engine/Loaders/Loaders.cpp
+        src/Engine/SoundManager/Sound.cpp
+        src/Engine/SoundManager/SoundManager.cpp
+        src/Engine/Math/matrix.cpp
+        src/Engine/Camera/camera.cpp
+        src/Engine/Math/Collisions.cpp
+        src/Engine/Scene/SceneManager.cpp
 )
 
 target_link_libraries(RacecaR PRIVATE
@@ -72,10 +74,11 @@ target_include_directories(RacecaR PRIVATE
         ${STB_INCLUDE_DIR}
         ${TINYGLTF_INCLUDE_DIR}
         "${EXTERNAL_DIR}/bullet3-3.25/src"
-        Engine
+        src
+        src/Engine
 )
 
 target_compile_definitions(RacecaR PRIVATE
         ASSET_RESOURCES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/"
-        SHADER_RESOURCES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/Engine/Shader/"
+        SHADER_RESOURCES_PATH="${CMAKE_CURRENT_SOURCE_DIR}/src/Engine/Shader/"
 )

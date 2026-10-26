@@ -11,6 +11,7 @@
 #include <glm/glm.hpp>
 #include <glm/detail/type_quat.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <string>
 #include <vector>
 
 struct SceneObject {
@@ -18,14 +19,23 @@ struct SceneObject {
     glm::vec3 position{0.0f};
     glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
     glm::vec3 scale{1.0f};
+    glm::quat localAnimationRotation{1.0f, 0.0f, 0.0f, 0.0f};
+    std::vector<glm::mat4> jointMatrices;
+    std::vector<int> skinJointNodes;
+    std::vector<glm::mat4> inverseBindMatrices;
+    glm::mat4 inverseMeshNodeTransform{1.0f};
+    bool skinningEnabled = false;
     btRigidBody* body = nullptr;
     GLuint textureID = 0;
+    std::string nodeName;
     glm::vec4 baseColor{1.0f};
     glm::vec3 localCenter{0.0f};
     bool transparent = false;
     bool alphaMasked = false;
     float alphaCutoff = 0.5f;
 
+    glm::mat4 modelMatrix() const;
+    void uploadSkinning(const Shader& shader) const;
     void draw(Shader& shader);
 };
 

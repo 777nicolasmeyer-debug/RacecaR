@@ -16,6 +16,7 @@
 #include "Meshes/Meshes.h"
 #include "Scene/SceneManager.h"
 #include "Shader/Shader.h"
+#include "SoundManager/SoundManager.h"
 
 class Engine {
 public:
@@ -75,6 +76,7 @@ public:
     void clearLights();
     glm::vec3 getCameraPosition() const;
     float getPlayerRPM() const;
+    float getPlayerSpeedKmh() const;
     int getPlayerGear() const;
     bool hasPlayer() const;
 
@@ -87,7 +89,7 @@ private:
     bool shadowMapReady = false;
     bool shiftUpWasPressed = false;
     bool shiftDownWasPressed = false;
-    float cameraSpeed = 5.0f;
+    float cameraSpeed = 500.0f;
     GLuint shadowFramebuffer = 0;
 
     Shader shader;
@@ -95,6 +97,7 @@ private:
     Camera camera;
     Collisions collisions;
     Loaders loader;
+    SoundManager soundManager;
     std::unordered_map<std::string, std::vector<MeshData>> modelCache;
     std::vector<SceneObject> sceneObjects;
     std::vector<SceneObject> terrainObjects;
@@ -104,6 +107,7 @@ private:
     bool initializeShadowMap();
     GLuint createShadowCubemap();
     const std::vector<MeshData>& loadModelMeshes(const char* path);
+    std::unordered_map<std::string, ModelAnimationData> animationCache;
     void renderShadowMap(GLuint shadowCubemap, const glm::vec3& lightPosition,
                          int width, int height);
     void updatePhysicsTransforms();

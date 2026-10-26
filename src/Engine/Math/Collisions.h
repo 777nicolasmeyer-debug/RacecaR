@@ -10,16 +10,23 @@
 #include"../Scene/SceneManager.h"
 #include <iostream>
 
+class btActionInterface;
+class btVehicleRaycaster;
+
 class Collisions {
 public:
     void init();
     void update(float dt);
     void removeRigidBody(btRigidBody* body);
+    btVehicleRaycaster* createVehicleRaycaster() const;
+    void addVehicle(btActionInterface* vehicle);
+    void removeVehicle(btActionInterface* vehicle);
     glm::vec3 getGroundNormal(const btRigidBody* body) const;
     btRigidBody* convexShapeD(SceneObject& sceneObj, const MeshData& mesh,
                               const glm::vec3& scale = glm::vec3(1.0f));
     btRigidBody* boxShapeD(SceneObject& sceneObj, const MeshData& mesh,
-                           const glm::vec3& scale = glm::vec3(1.0f));
+                           const glm::vec3& scale = glm::vec3(1.0f),
+                           float mass = 20.0f);
     btRigidBody* triangleShapeS(SceneObject& sceneObj, const MeshData& mesh);
 };
 

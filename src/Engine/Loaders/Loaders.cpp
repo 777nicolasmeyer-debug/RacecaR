@@ -205,11 +205,171 @@ GLuint Loaders::createWhiteTexture() {
     return texture;
 }
 
-MeshData Loaders::extractMeshData(const tinygltf::Model &model, const int meshIndex) {
+ModelAnimationData Loaders::extractAnimationData(const tinygltf::Model &model) const {
+    ModelAnimationData result;
+    result.nodes.resize(model.nodes.size());
+    for (size_t nodeIndex = 0; nodeIndex < model.nodes.size(); ++nodeIndex) {
+        const auto &source = model.nodes[nodeIndex];
+        auto &node = result.nodes[nodeIndex];
+        if (source.translation.size() == 3) {
+            node.translation = glm::vec3(static_cast<float>(source.translation[0]),
+                                         static_cast<float>(source.translation[1]),
+                                         static_cast<float>(source.translation[2]));
+        }
+        if (source.rotation.size() == 4) {
+            node.rotation = glm::quat(static_cast<float>(source.rotation[3]),
+                                      static_cast<float>(source.rotation[0]),
+                                      static_cast<float>(source.rotation[1]),
+                                      static_cast<float>(source.rotation[2]));
+        }
+        if (source.scale.size() == 3) {
+            node.scale = glm::vec3(static_cast<float>(source.scale[0]),
+                                   static_cast<float>(source.scale[1]),
+                                   static_cast<float>(source.scale[2]));
+        }
+        if (source.matrix.size() == 16) {
+            node.usesMatrix = true;
+            for (size_t column = 0; column < 4; ++column) {
+                for (size_t row = 0; row < 4; ++row) {
+                    node.matrix[column][row] =
+                        static_cast<float>(source.matrix[column * 4 + row]);
+                }
+            }
+        }
+        for (const int child : source.children) {
+            if (child >= 0 && static_cast<size_t>(child) < result.nodes.size()) {
+                result.nodes[child].parent = static_cast<int>(nodeIndex);
+            }
+        }
+    }
+
+    for (const auto &sourceClip : model.animations) {
+        AnimationClipData clip;
+        clip.name = sourceClip.name;
+        for (const auto &sourceChannel : sourceClip.channels) {
+            if (sourceChannel.target_node < 0 ||
+                static_cast<size_t>(sourceChannel.target_node) >= result.nodes.size() ||
+                sourceChannel.sampler < 0 ||
+                static_cast<size_t>(sourceChannel.sampler) >= sourceClip.samplers.size()) {
+                continue;
+            }
+            AnimationPath path;
+            size_t componentCount = 0;
+            if (sourceChannel.target_path == "translation") {
+                path = AnimationPath::Translation;
+                componentCount = 3;
+            } else if (sourceChannel.target_path == "rotation") {
+                path = AnimationPath::Rotation;
+                componentCount = 4;
+            } else if (sourceChannel.target_path == "scale") {
+                path = AnimationPath::Scale;
+                componentCount = 3;
+            } else {
+                continue;
+            }
+
+            const auto &sampler = sourceClip.samplers[sourceChannel.sampler];
+            if (sampler.interpolation == "CUBICSPLINE" ||
+                sampler.input < 0 || sampler.output < 0 ||
+                static_cast<size_t>(sampler.input) >= model.accessors.size() ||
+                static_cast<size_t>(sampler.output) >= model.accessors.size()) {
+                std::cerr << "Skipping unsupported glTF animation channel in clip "
+                          << sourceClip.name << std::endl;
+                continue;
+            }
+            const auto &input = model.accessors[sampler.input];
+            const auto &output = model.accessors[sampler.output];
+            if (input.type != TINYGLTF_TYPE_SCALAR ||
+                input.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT ||
+                output.type != (componentCount == 4 ? TINYGLTF_TYPE_VEC4 : TINYGLTF_TYPE_VEC3) ||
+                output.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT ||
+                output.count != input.count) {
+                std::cerr << "Skipping malformed glTF animation channel in clip "
+                          << sourceClip.name << std::endl;
+                continue;
+            }
+
+            AnimationChannelData channel;
+            channel.node = sourceChannel.target_node;
+            channel.path = path;
+            channel.interpolation = sampler.interpolation;
+            channel.times.reserve(input.count);
+            channel.values.reserve(output.count * componentCount);
+            bool valid = true;
+            for (size_t key = 0; key < input.count; ++key) {
+                const unsigned char *timeData = getElementData(model, input, key);
+                const unsigned char *valueData = getElementData(model, output, key);
+                if (timeData == nullptr || valueData == nullptr) {
+                    valid = false;
+                    break;
+                }
+                float time = 0.0f;
+                std::memcpy(&time, timeData, sizeof(time));
+                channel.times.push_back(time);
+                clip.duration = std::max(clip.duration, time);
+                for (size_t component = 0; component < componentCount; ++component) {
+                    float value = 0.0f;
+                    std::memcpy(&value, valueData + component * sizeof(float), sizeof(value));
+                    channel.values.push_back(value);
+                }
+            }
+            if (valid && !channel.times.empty()) {
+                clip.channels.push_back(std::move(channel));
+            }
+        }
+        if (!clip.channels.empty()) {
+            result.clips.push_back(std::move(clip));
+        }
+    }
+    return result;
+}
+
+MeshData Loaders::extractMeshData(const tinygltf::Model &model, const int meshIndex,
+                                 const int skinIndex,
+                                 const glm::mat4 &meshNodeTransform) {
     MeshData data;
     if (meshIndex < 0 || static_cast<size_t>(meshIndex) >= model.meshes.size()) {
         std::cerr << "Invalid glTF mesh index: " << meshIndex << std::endl;
         return data;
+    }
+
+    if (skinIndex >= 0 && static_cast<size_t>(skinIndex) < model.skins.size()) {
+        const auto &skin = model.skins[skinIndex];
+        if (!skin.joints.empty() && skin.joints.size() <= 64) {
+            data.skinJointNodes = skin.joints;
+            data.inverseMeshNodeTransform = glm::inverse(meshNodeTransform);
+            data.inverseBindMatrices.assign(skin.joints.size(), glm::mat4(1.0f));
+            if (skin.inverseBindMatrices >= 0 &&
+                static_cast<size_t>(skin.inverseBindMatrices) < model.accessors.size()) {
+                const auto &accessor = model.accessors[skin.inverseBindMatrices];
+                if (accessor.type != TINYGLTF_TYPE_MAT4 ||
+                    accessor.count < skin.joints.size() ||
+                    accessor.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT) {
+                    std::cerr << "Invalid inverse bind matrices for glTF skin" << std::endl;
+                    data.skinJointNodes.clear();
+                    data.inverseBindMatrices.clear();
+                } else {
+                    for (size_t joint = 0; joint < skin.joints.size(); ++joint) {
+                        const unsigned char *element = getElementData(model, accessor, joint);
+                        if (element == nullptr) {
+                            data.skinJointNodes.clear();
+                            data.inverseBindMatrices.clear();
+                            break;
+                        }
+                        for (size_t column = 0; column < 4; ++column) {
+                            for (size_t row = 0; row < 4; ++row) {
+                                float value = 0.0f;
+                                std::memcpy(&value, element + (column * 4 + row) * sizeof(float),
+                                            sizeof(float));
+                                data.inverseBindMatrices[joint][column][row] = value;
+                            }
+                        }
+                    }
+                }
+            }
+        } else if (skin.joints.size() > 64) {
+            std::cerr << "Skipping glTF skin with more than 64 joints" << std::endl;
+        }
     }
 
     const auto &mesh = model.meshes[meshIndex];
@@ -226,6 +386,23 @@ MeshData Loaders::extractMeshData(const tinygltf::Model &model, const int meshIn
 
         const tinygltf::Accessor *normals = findAccessor(model, primitive, "NORMAL");
         const tinygltf::Accessor *uvs = findAccessor(model, primitive, "TEXCOORD_0");
+        const tinygltf::Accessor *joints = findAccessor(model, primitive, "JOINTS_0");
+        const tinygltf::Accessor *weights = findAccessor(model, primitive, "WEIGHTS_0");
+        const bool hasSkinAttributes =
+            !data.skinJointNodes.empty() && joints != nullptr && weights != nullptr &&
+            joints->type == TINYGLTF_TYPE_VEC4 && weights->type == TINYGLTF_TYPE_VEC4 &&
+            (joints->componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE ||
+             joints->componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) &&
+            isSupportedAttributeComponent(weights->componentType);
+        const int jointComponentSize = joints == nullptr
+                                           ? 0
+                                           : tinygltf::GetComponentSizeInBytes(joints->componentType);
+        const int weightComponentSize = weights == nullptr
+                                            ? 0
+                                            : tinygltf::GetComponentSizeInBytes(weights->componentType);
+        if (hasSkinAttributes) {
+            data.skinned = true;
+        }
         const size_t baseVertexCount = data.vertices.size() / 8;
         const size_t baseIndexCount = data.indices.size();
         std::vector<unsigned int> indices;
@@ -324,6 +501,10 @@ MeshData Loaders::extractMeshData(const tinygltf::Model &model, const int meshIn
                         : nullptr;
             const unsigned char *uvData =
                     uvs != nullptr && index < uvs->count ? getElementData(model, *uvs, index) : nullptr;
+            const unsigned char *jointData =
+                    hasSkinAttributes && index < joints->count ? getElementData(model, *joints, index) : nullptr;
+            const unsigned char *weightData =
+                    hasSkinAttributes && index < weights->count ? getElementData(model, *weights, index) : nullptr;
             if (positionData == nullptr) {
                 validPrimitive = false;
                 break;
@@ -348,11 +529,34 @@ MeshData Loaders::extractMeshData(const tinygltf::Model &model, const int meshIn
                         : readAttributeComponent(uvData + component * uvComponentSize,
                                                  uvs->componentType, uvs->normalized));
             }
+            glm::vec4 vertexJoints(0.0f);
+            glm::vec4 vertexWeights(0.0f);
+            if (jointData != nullptr && weightData != nullptr) {
+                for (int component = 0; component < 4; ++component) {
+                    vertexJoints[component] = readAttributeComponent(
+                        jointData + component * jointComponentSize, joints->componentType, false);
+                    vertexWeights[component] = readAttributeComponent(
+                        weightData + component * weightComponentSize, weights->componentType,
+                        weights->normalized);
+                }
+                const float totalWeight = vertexWeights.x + vertexWeights.y +
+                                          vertexWeights.z + vertexWeights.w;
+                if (totalWeight > 0.0f) {
+                    vertexWeights /= totalWeight;
+                }
+            }
+            for (int component = 0; component < 4; ++component) {
+                data.skinAttributes.push_back(vertexJoints[component]);
+            }
+            for (int component = 0; component < 4; ++component) {
+                data.skinAttributes.push_back(vertexWeights[component]);
+            }
             data.indices.push_back(static_cast<unsigned int>(data.indices.size()));
         }
 
         if (!validPrimitive) {
             data.vertices.resize(baseVertexCount * 8);
+            data.skinAttributes.resize(baseVertexCount * 8);
             data.indices.resize(baseIndexCount);
             std::cerr << "Skipping glTF primitive with invalid vertex data" << std::endl;
             continue;

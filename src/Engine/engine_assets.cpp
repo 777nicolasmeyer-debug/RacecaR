@@ -75,6 +75,7 @@ const std::vector<MeshData> &Engine::loadModelMeshes(const char *path) {
     if (!loader.loadModelFromFile(path, model)) {
         return entry->second;
     }
+    animationCache[path] = loader.extractAnimationData(model);
     if (model.meshes.empty()) {
         std::cerr << "Model contains no meshes: " << path << std::endl;
         return entry->second;
@@ -97,7 +98,8 @@ const std::vector<MeshData> &Engine::loadModelMeshes(const char *path) {
         const auto &node = model.nodes[nodeIndex];
         const glm::mat4 worldTransform = parentTransform * getNodeTransform(node);
         if (node.mesh >= 0 && static_cast<size_t>(node.mesh) < model.meshes.size()) {
-            MeshData mesh = loader.extractMeshData(model, node.mesh);
+            MeshData mesh = loader.extractMeshData(model, node.mesh, node.skin, worldTransform);
+            mesh.nodeName = node.name;
             applyNodeTransform(mesh, worldTransform);
             if (!mesh.vertices.empty()) {
                 glm::vec3 minimum(std::numeric_limits<float>::max());

@@ -17,8 +17,21 @@ window and OpenGL lifecycle.
 - glTF scene loading, including node transforms and model caching
 - Bullet-powered collision and vehicle physics
 - Switchable first-person camera and F1 car
+- Named car parts animate steering and wheel rotation when supported by the model
 - Eight-speed manual gearbox with RPM and gear shown in the window title
 - Configurable vehicle handling in `Engine/Car/CarConfig.h`
+
+### RB18 wheel setup
+
+The car uses Bullet's four-wheel raycast vehicle for steering, suspension, grip,
+and braking. It fits the physics wheel centers and radius from the four RB18
+tire meshes, using the standard `+X` right, `+Y` up, `+Z` forward vehicle frame.
+In Blender, keep each tire as a separate front/rear and left/right node, and preserve names
+containing `Front` or `Back` and `Tire`; matching rim, disk, and hub nodes follow
+their corresponding wheel. If you change the model's orientation or export
+scale, update handling values in `Engine/Car/CarConfig.h`. Tune steering angles,
+suspension stiffness/damping, and suspension travel there; changing the Blender
+body shape alone will not change how the physics car turns.
 
 ## Controls
 

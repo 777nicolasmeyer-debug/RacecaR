@@ -21,6 +21,18 @@ void VAO_VBO::init(const MeshData& meshData) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, meshData.vertices.size() * sizeof(float), meshData.vertices.data(), GL_STATIC_DRAW);
 
+    if (meshData.skinned && !meshData.skinAttributes.empty()) {
+        glGenBuffers(1, &skinVbo);
+        glBindBuffer(GL_ARRAY_BUFFER, skinVbo);
+        glBufferData(GL_ARRAY_BUFFER, meshData.skinAttributes.size() * sizeof(float),
+                     meshData.skinAttributes.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), nullptr);
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                              reinterpret_cast<void *>(4 * sizeof(float)));
+        glEnableVertexAttribArray(4);
+    }
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshData.indices.size() * indexSize, meshData.indices.data(), GL_STATIC_DRAW);
 
@@ -47,5 +59,4 @@ void VAO_VBO::draw() const {
 
 
 }
-
 

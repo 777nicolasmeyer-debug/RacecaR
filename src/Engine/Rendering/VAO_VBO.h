@@ -12,6 +12,7 @@ class VAO_VBO {
 public:
     GLuint vao;
     GLuint vbo;
+    GLuint skinVbo = 0;
     GLuint ebo;
     GLsizei indexCount;
     int indexType;
